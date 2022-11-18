@@ -1,13 +1,22 @@
 const User = require('../models/USER');
 const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
+
 
 const userController = {
+
+
+  // deleteAll: async(req, res) => {
+  //     const deleteUser = await User.find({User})
+  //     return res.send('wewewe')
+  // },
 
 
   users: async(req, res)=>{
     const getUsers = await User.find({User})
     return res.send(getUsers)
   },
+
 
   register: async (req, res) => {
 
@@ -45,7 +54,11 @@ const userController = {
         return res.status(400).send('Email ou senha incorreta!')
       }
 
+      const token = jwt.sign({_id: selectedUser._id}, process.env.TOKEN_SECRET)
+
+      res.header('authorization-token', token)
       res.status(200).send('Usuário logado com sucesso!')
+
   },
 };
 
