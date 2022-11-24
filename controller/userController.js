@@ -2,9 +2,11 @@ const User = require('../models/USER');
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
 
+const {registerValidate, loginValidate} = require('./validate')
+
+
 
 const userController = {
-
 
   // deleteAll: async(req, res) => {
   //     const deleteUser = await User.find({User})
@@ -12,13 +14,19 @@ const userController = {
   // },
 
 
-  users: async(req, res)=>{
+  get: async(req, res)=>{
     const getUsers = await User.find({User})
     return res.send(getUsers)
   },
+  
 
 
   register: async (req, res) => {
+
+    const {error} = registerValidate(req.body)
+    if(error) {
+      return res.status(400).send(error.message)
+    }
 
     const selectedUser =  await User.findOne({email: req.body.email})
     if(selectedUser){
@@ -42,19 +50,28 @@ const userController = {
   },
 
 
+
+
   login: async (req, res) => {
+
+    const {error} = loginValidate(req.body)
+    if(error){
+      return res.status(400).send(error.message)
+    }
+
 
     const selectedUser =  await User.findOne({email: req.body.email})
     if(!selectedUser){
         return res.status(400).send('Email ou senha incorreta!')
     }
 
+
     const passwordAndUserMatch =  bcrypt.compareSync(req.body.password, selectedUser.password)
       if(!passwordAndUserMatch){
         return res.status(400).send('Email ou senha incorreta!')
       }
 
-      const token = jwt.sign({_id: selectedUser._id}, process.env.TOKEN_SECRET)
+      const token = jwt.sign({_id: selectedUser._id, admin: selectedUser.admin}, process.env.TOKEN_SECRET)
 
       res.header('authorization-token', token)
       res.status(200).send('Usuário logado com sucesso!')
